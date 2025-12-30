@@ -1,13 +1,13 @@
 databases:
-  - name: Isiolo City DB
+  - name: isiolo-city-postgres
     databaseName: isiolo_city_db
-    user: isiolo_city_db
+    user: isiolo_admin
     plan: free
     region: oregon
 
 services:
   - type: web
-    name: isiolo-city-server
+    name: isiolo-city-backend
     runtime: node
     region: oregon
     plan: free
@@ -25,7 +25,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://isolocityfc.com
+        value: https://your-frontend-url.onrender.com
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD

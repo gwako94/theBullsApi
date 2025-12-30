@@ -10,6 +10,7 @@ dist/
 .env.production
 .env.example
 
+
 # IDE
 .vscode/
 .idea/
@@ -20,6 +21,7 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+render.yaml
 
 # Logs
 logs/
