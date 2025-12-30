@@ -55,6 +55,13 @@ async function startServer() {
     cors<cors.CorsRequest>({
       origin: [
         process.env.FRONTEND_URL || 'http://localhost:3000',
+        'https://isiolocityfc.com',
+        'https://www.isiolocityfc.com',
+        'http://isiolocityfc.com',
+        'http://www.isiolocityfc.com',
+        'https://isiolocityfc.onrender.com',
+        'https://thebullsclient.onrender.com',
+        'http://localhost:3000',
         'http://localhost:3001', // Admin dashboard
       ],
       credentials: true,

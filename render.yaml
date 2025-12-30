@@ -25,7 +25,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://your-frontend-url.onrender.com
+        value: https://isiolocityfc.com
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD

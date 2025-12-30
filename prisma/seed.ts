@@ -90,7 +90,7 @@ A big test lies ahead — but under **Abuze**, the Bulls are moving forward with
       featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1766677433/josh-power-byRCfbkd8AY-unsplash_qe4meb.jpg',
       tags: ['preseason', 'coach', 'training', 'Coach Abu', '2026-2027'],
       authorId: admin.id,
-      publishedAt: new Date('2025-12-20T09:00:00Z'),
+      publishedAt: new Date('2025-12-27T09:00:00Z'),
     },
   });
 
@@ -127,7 +127,7 @@ As kickoff approaches, one thing is certain:
       featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1767091875/Gemini_Generated_Image_sjqr81sjqr81sjqr_qr7f6z.png',
       tags: ['match preview', 'preseason', 'friendly', 'Town FC', 'Marsabit'],
       authorId: admin.id,
-      publishedAt: new Date('2025-12-22T08:00:00Z'),
+      publishedAt: new Date('2025-12-28T08:00:00Z'),
     },
   });
 
@@ -171,34 +171,44 @@ As the seedlings take root during the rainy season, they symbolize hope, renewal
 
   // Create Article 4: Captain Fantastic
   const article4 = await prisma.article.upsert({
-    where: { slug: 'meet-captain-fantastic-muhsin-ibrahim' },
+    where: { slug: 'meet-captain-fantastic-arafat-mohamed' },
     update: {},
     create: {
       id: generateIcfcIdWithModel('article'),
-      title: 'Meet Our Captain Fantastic: Muhsin Ibrahim',
-      slug: 'meet-captain-fantastic-muhsin-ibrahim',
-      content: `# Meet Our Captain Fantastic: Muhsin Ibrahim
+      title: 'Meet Our Captain Fantastic: Arafat Mohamed',
+      slug: 'meet-captain-fantastic-arafat-mohamed',
+      content: `Leadership, commitment, and passion define **Arafat Mohamed Mugo**, fondly known as **Arif** — the heartbeat of **Isiolo City FC** and the man entrusted with wearing the captain’s armband. As the Bulls continue to build a competitive and disciplined squad, Arif stands out as a symbol of resilience and responsibility both on and off the pitch.
 
-Every successful football team needs a leader who inspires confidence, discipline, and belief. For **Isiolo City Football Club**, that leader is **Muhsin Ibrahim** — proudly known as *our Captain Fantastic*.
+Arafat Mohamed Mugo leads by example. Calm under pressure and fearless in competition, he brings balance and authority to the team. Whether organizing play, motivating teammates, or making crucial interventions, Arif’s presence is felt across the pitch. His understanding of the game and ability to read situations have made him a natural leader within the dressing room.
 
-Muhsin's influence extends far beyond the captain's armband. Calm under pressure and consistent in performance, he leads by example both in training and on match day. His commitment and understanding of the game have earned him respect across the squad.
+## A Captain Built on Hard Work
 
-As a senior figure, Muhsin plays a vital role in maintaining unity and focus. He bridges the gap between the technical bench and the players, ensuring instructions are executed and standards upheld. When challenges arise, he is always the first to respond.
+Arif’s journey to captaincy is a story of dedication and consistency. Rising through local football structures, he earned his place through discipline, strong performances, and unwavering commitment to the club’s values. Coaches and teammates alike recognize him as a player who trains hard, listens, and constantly seeks improvement — qualities that define a true captain.
 
-Off the pitch, Muhsin embodies humility and professionalism. Younger players look up to him not only for football guidance, but for lessons in discipline and responsibility. He understands the honor of representing Isiolo City FC and carries the badge with pride.
+His leadership style is rooted in communication and accountability. Arif ensures standards are upheld during training and matchdays, demanding the best from himself before asking it of others. This approach has helped foster unity and belief within the Isiolo City FC squad.
 
-Supporters have embraced him as one of their own. His connection with fans reflects his appreciation for their role in the team's journey. For Muhsin, leadership is not about status — it is about service.
+## On-Field Influence
 
-As the Bulls prepare for the season ahead, Muhsin Ibrahim's presence will be crucial in driving the team forward.
+Operating as a commanding figure on the pitch, Arif combines tactical awareness with physical strength and composure. He plays with intelligence, understands when to press or drop, and knows how to manage game tempo — especially in high-pressure situations. His reliability has made him one of the first names on the team sheet.
 
-🐂⚽ **Muhsin Ibrahim — Captain Fantastic, heart of the Bulls.**`,
-      excerpt: 'Meet Muhsin Ibrahim, the calm and composed leader who embodies discipline, professionalism, and unity as captain of Isiolo City Football Club.',
+Beyond his technical ability, Arif embodies the Bulls’ fighting spirit. He never shies away from responsibility, particularly in tough matches where leadership is most required.
+
+## A Role Model for the Community
+
+Off the pitch, Arif represents the club with humility and pride. He connects easily with supporters, inspires younger players, and understands the responsibility that comes with captaining a community-driven club like Isiolo City FC.
+
+## Captain Fantastic
+
+As Isiolo City FC looks toward a challenging and ambitious season ahead, having **Arafat Mohamed Mugo (Arif)** as captain provides stability, confidence, and direction. He is more than just a leader — he is the standard.
+
+**Captain Fantastic. Leader of the Bulls.** 🐂⚽**`,
+      excerpt: 'Meet Arafat Mohamed, the calm and composed leader who embodies discipline, professionalism, and unity as captain of Isiolo City Football Club.',
       category: 'PLAYER_PROFILE',
       status: 'PUBLISHED',
-      featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1767091876/Gemini_Generated_Image_b9woiob9woiob9wo_pcpi7h.png',
-      tags: ['player profile', 'captain', 'Muhsin Ibrahim', 'leadership', 'team'],
+      featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1767115888/IMG-20251230-WA0021_bbyrap.jpg',
+      tags: ['player profile', 'captain', 'Arafat Mugo', 'leadership', 'team'],
       authorId: admin.id,
-      publishedAt: new Date('2025-12-24T10:00:00Z'),
+      publishedAt: new Date('2025-12-26T10:00:00Z'),
     },
   });
 
