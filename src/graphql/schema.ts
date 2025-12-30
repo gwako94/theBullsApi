@@ -193,8 +193,18 @@ export const typeDefs = gql`
     dateOfBirth: DateTime!
     height: Float
     weight: Float
+    preferredFoot: String
     bio: String
     joinedDate: DateTime!
+    photoUrls: [String!]
+  }
+
+  type BulkPlayerResult {
+    success: Boolean!
+    created: Int!
+    failed: Int!
+    errors: [String!]!
+    players: [Player!]!
   }
 
   # ============================================
@@ -482,6 +492,7 @@ export const typeDefs = gql`
 
     # Players (Admin only)
     createPlayer(input: CreatePlayerInput!): Player!
+    bulkCreatePlayers(input: [CreatePlayerInput!]!): BulkPlayerResult!
     updatePlayer(id: ID!, input: JSON!): Player!
     deletePlayer(id: ID!): Boolean!
 

@@ -8,7 +8,7 @@ async function main() {
   console.log('Starting database seed...');
 
   // Get admin credentials from environment variables with fallbacks
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@isiolo.com';
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@isiolocityfc.com';
   const adminPassword = process.env.ADMIN_PASSWORD || '@admin123';
   const adminName = process.env.ADMIN_NAME || 'Admin';
 
@@ -43,63 +43,6 @@ async function main() {
   console.log('   ⚠️  IMPORTANT: Change the password after first login!');
   console.log('');
 
-  // Create Isiolo City FC team
-  const isioloTeam = await prisma.team.upsert({
-    where: { id: 'isiolo-city-fc' },
-    update: {},
-    create: {
-      id: 'isiolo-city-fc',
-      name: 'Isiolo City FC',
-      shortName: 'Isiolo',
-      country: 'Kenya',
-      founded: 2020,
-      stadium: 'Isiolo Stadium',
-    },
-  });
-
-  console.log('✅ Isiolo City FC team created');
-
-  // Create sample venue
-  const venue = await prisma.venue.upsert({
-    where: { id: 'isiolo-stadium' },
-    update: {},
-    create: {
-      id: 'isiolo-stadium',
-      name: 'Isiolo Stadium',
-      city: 'Isiolo',
-      country: 'Kenya',
-      capacity: 5000,
-      address: 'Isiolo Town, Kenya',
-    },
-  });
-
-  console.log('✅ Isiolo Stadium venue created');
-
-  // Create sample teams for matches
-  const nairobiStars = await prisma.team.upsert({
-    where: { id: 'nairobi-stars-fc' },
-    update: {},
-    create: {
-      id: 'nairobi-stars-fc',
-      name: 'Nairobi Stars FC',
-      shortName: 'Nairobi Stars',
-      country: 'Kenya',
-    },
-  });
-
-  const mombasaUnited = await prisma.team.upsert({
-    where: { id: 'mombasa-united' },
-    update: {},
-    create: {
-      id: 'mombasa-united',
-      name: 'Mombasa United',
-      shortName: 'Mombasa',
-      country: 'Kenya',
-    },
-  });
-
-  console.log('✅ Sample opponent teams created');
-
   // Create Article 1: Coach Abu Preseason
   const article1 = await prisma.article.upsert({
     where: { slug: 'big-test-ahead-go-for-coach-abu-preseason-begins' },
@@ -108,8 +51,7 @@ async function main() {
       id: generateIcfcIdWithModel('article'),
       title: 'Big Test Ahead: Go for Coach Abu as Isiolo City FC Pre-Season Begins',
       slug: 'big-test-ahead-go-for-coach-abu-preseason-begins',
-      content: `# Big Test Ahead: Go for Coach Abu as Isiolo City FC Pre-Season Begins
-
+      content: `
 As the dust settles on the previous campaign, all eyes in Isiolo are now firmly fixed on the training ground at **Wabera Stadium**. **Isiolo City Football Club — the Bulls — have officially begun preparations for the 2026/2027 season**, marking the start of a defining chapter under head coach **Abubakar Daud Tari**, fondly known as *Coach Abu* or *Abuze*.
 
 At just **23 years old**, the FKF-trained tactician is already commanding respect within the squad. Players speak highly of his energy, discipline, and clarity of ideas — qualities that reflect both his football journey and his academic background. Currently on a **five-year contract**, Coach Abu represents the club's long-term vision built on **youth development, structure, and ambition**.
@@ -146,7 +88,7 @@ A big test lies ahead — but under **Abuze**, the Bulls are moving forward with
       category: 'NEWS',
       status: 'PUBLISHED',
       featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1766677433/josh-power-byRCfbkd8AY-unsplash_qe4meb.jpg',
-      tags: ['news', 'preseason', 'coach', 'training', 'Coach Abu', '2026-2027'],
+      tags: ['preseason', 'coach', 'training', 'Coach Abu', '2026-2027'],
       authorId: admin.id,
       publishedAt: new Date('2025-12-20T09:00:00Z'),
     },
@@ -162,8 +104,7 @@ A big test lies ahead — but under **Abuze**, the Bulls are moving forward with
       id: generateIcfcIdWithModel('article'),
       title: 'Record Crowd Expected as Isiolo City FC Face Town FC of Marsabit in Preseason Friendly',
       slug: 'record-crowd-expected-isiolo-city-fc-vs-town-fc-marsabit',
-      content: `# Record Crowd Expected as Isiolo City FC Face Town FC of Marsabit in Preseason Friendly
-
+      content: `
 Excitement is building across Isiolo as **Isiolo City Football Club — the Bulls — prepare to host Town FC of Marsabit** in a highly anticipated preseason friendly expected to draw a record crowd.
 
 Though officially a friendly, the match carries significant weight. Regional pride, rivalry, and preseason momentum are all at stake as the Bulls test themselves against strong opposition.
@@ -183,7 +124,7 @@ As kickoff approaches, one thing is certain:
       excerpt: 'Excitement builds as Isiolo City FC host Town FC of Marsabit in a preseason friendly expected to draw record crowds and test the Bulls ahead of the new season.',
       category: 'PRESEASON',
       status: 'PUBLISHED',
-      featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1766677433/josh-power-byRCfbkd8AY-unsplash_qe4meb.jpg',
+      featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1767091875/Gemini_Generated_Image_sjqr81sjqr81sjqr_qr7f6z.png',
       tags: ['match preview', 'preseason', 'friendly', 'Town FC', 'Marsabit'],
       authorId: admin.id,
       publishedAt: new Date('2025-12-22T08:00:00Z'),
@@ -200,8 +141,7 @@ As kickoff approaches, one thing is certain:
       id: generateIcfcIdWithModel('article'),
       title: 'Isiolo City FC Players Give Back as They Distribute Seedlings During December Short Rains',
       slug: 'isiolo-city-fc-players-distribute-seedlings-december-rains',
-      content: `# Isiolo City FC Players Give Back as They Distribute Seedlings During December Short Rains
-
+      content: `
 As the December short rains swept across Isiolo, **Isiolo City Football Club — the Bulls — stepped beyond football**, joining the community in an environmental conservation initiative through the distribution of tree seedlings.
 
 With the rains providing ideal planting conditions, Bulls players worked alongside local residents to encourage **tree planting, environmental awareness, and sustainable living**. The initiative aimed to support long-term ecological balance while strengthening the bond between the club and the community it proudly represents.
@@ -220,7 +160,7 @@ As the seedlings take root during the rainy season, they symbolize hope, renewal
       excerpt: 'Isiolo City FC players join the community in distributing tree seedlings during the December rains, demonstrating the club\'s commitment to environmental conservation and social responsibility.',
       category: 'COMMUNITY_OUTREACH',
       status: 'PUBLISHED',
-      featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1766677433/josh-power-byRCfbkd8AY-unsplash_qe4meb.jpg',
+      featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1767091880/Gemini_Generated_Image_alrzztalrzztalrz_qd2d9a.png',
       tags: ['community', 'environment', 'tree planting', 'social responsibility', 'CSR'],
       authorId: admin.id,
       publishedAt: new Date('2025-12-18T11:00:00Z'),
@@ -255,7 +195,7 @@ As the Bulls prepare for the season ahead, Muhsin Ibrahim's presence will be cru
       excerpt: 'Meet Muhsin Ibrahim, the calm and composed leader who embodies discipline, professionalism, and unity as captain of Isiolo City Football Club.',
       category: 'PLAYER_PROFILE',
       status: 'PUBLISHED',
-      featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1766677433/josh-power-byRCfbkd8AY-unsplash_qe4meb.jpg',
+      featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1767091876/Gemini_Generated_Image_b9woiob9woiob9wo_pcpi7h.png',
       tags: ['player profile', 'captain', 'Muhsin Ibrahim', 'leadership', 'team'],
       authorId: admin.id,
       publishedAt: new Date('2025-12-24T10:00:00Z'),
@@ -269,14 +209,6 @@ As the Bulls prepare for the season ahead, Muhsin Ibrahim's presence will be cru
   console.log('========================================');
   console.log('Seed completed successfully! 🎉');
   console.log('========================================');
-  console.log('');
-  console.log('You can now login to the admin dashboard at:');
-  console.log('http://localhost:3001/login');
-  console.log('');
-  console.log('Credentials:');
-  console.log('Email: admin@isiolocityfc.com');
-  console.log('Password: admin123');
-  console.log('');
 }
 
 main()

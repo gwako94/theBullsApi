@@ -46,6 +46,75 @@ export const playerResolvers = {
       });
     },
 
+    bulkCreatePlayers: async (_: any, { input }: { input: any[] }, context: Context) => {
+      if (!context.user || context.user.role !== 'ADMIN') {
+        throw new GraphQLError('Unauthorized', {
+          extensions: { code: 'UNAUTHORIZED' },
+        });
+      }
+
+      const errors: string[] = [];
+      const createdPlayers: any[] = [];
+      let successCount = 0;
+      let failedCount = 0;
+
+      // Process each player input
+      for (let i = 0; i < input.length; i++) {
+        const playerInput = input[i];
+
+        try {
+          // Check for duplicate jersey number
+          const existing = await context.prisma.player.findFirst({
+            where: {
+              jerseyNumber: playerInput.jerseyNumber,
+              status: { not: 'RETIRED' }
+            },
+          });
+
+          if (existing) {
+            errors.push(`Player ${i + 1}: Jersey number ${playerInput.jerseyNumber} is already taken by ${existing.displayName}`);
+            failedCount++;
+            continue;
+          }
+
+          // Create the player
+          const player = await context.prisma.player.create({
+            data: {
+              id: generateIcfcIdWithModel('player'),
+              firstName: playerInput.firstName,
+              lastName: playerInput.lastName,
+              displayName: playerInput.displayName,
+              position: playerInput.position,
+              jerseyNumber: playerInput.jerseyNumber,
+              nationality: playerInput.nationality,
+              dateOfBirth: new Date(playerInput.dateOfBirth),
+              height: playerInput.height,
+              weight: playerInput.weight,
+              preferredFoot: playerInput.preferredFoot,
+              bio: playerInput.bio,
+              joinedDate: new Date(playerInput.joinedDate),
+              photoUrls: playerInput.photoUrls || [],
+              status: 'ACTIVE',
+            },
+          });
+
+          createdPlayers.push(player);
+          successCount++;
+        } catch (error: any) {
+          errors.push(`Player ${i + 1} (${playerInput.displayName}): ${error.message}`);
+          failedCount++;
+        }
+      }
+
+      return {
+        success: failedCount === 0,
+        created: successCount,
+        failed: failedCount,
+        errors,
+        players: createdPlayers,
+      };
+    },
+
     updatePlayer: async (_: any, { id, input }: any, context: Context) => {
       if (!context.user || context.user.role !== 'ADMIN') {
         throw new GraphQLError('Unauthorized', {
