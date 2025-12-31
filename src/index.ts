@@ -25,7 +25,7 @@ async function startServer() {
       ApolloServerPluginDrainHttpServer({ httpServer }),
       ApolloServerPluginLandingPageLocalDefault({ embed: true }),
     ],
-    introspection: true, // Enable introspection for GraphQL playground
+    introspection: true,
     formatError: (error) => {
       if (process.env.NODE_ENV === 'production') {
         console.error('GraphQL Error:', {
@@ -54,15 +54,15 @@ async function startServer() {
     '/graphql',
     cors<cors.CorsRequest>({
       origin: [
-        process.env.FRONTEND_URL || 'http://localhost:3000',
         'https://isiolocityfc.com',
         'https://www.isiolocityfc.com',
         'http://isiolocityfc.com',
         'http://www.isiolocityfc.com',
         'https://isiolocityfc.onrender.com',
         'https://thebullsclient.onrender.com',
-        'http://localhost:3000',
-        'http://localhost:3001', // Admin dashboard
+        ...(process.env.NODE_ENV !== 'production'
+          ? ['http://localhost:3000', 'http://localhost:3001']
+          : []),
       ],
       credentials: true,
     }),
@@ -91,8 +91,9 @@ async function startServer() {
     httpServer.listen({ port: PORT }, resolve)
   );
 
-  console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
-  console.log(`📊 Health check at http://localhost:${PORT}/health`);
+  const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+  console.log(`Server ready at ${baseUrl}/graphql`);
+  console.log(`Health check at ${baseUrl}/health`);
 }
 
 startServer().catch((error) => {

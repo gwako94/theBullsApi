@@ -8,7 +8,11 @@ const JWT_EXPIRES_IN = '7d';
 const REFRESH_TOKEN_EXPIRES_IN = '30d';
 
 function getJWTSecret(): string {
-  return process.env.JWT_SECRET || 'your-secret-key';
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not set');
+  }
+  return secret;
 }
 
 function generateTokens(userId: string, email: string, role: string) {

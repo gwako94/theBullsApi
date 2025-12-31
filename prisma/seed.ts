@@ -14,8 +14,8 @@ async function main() {
 
   // Warn if using default credentials
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
-    console.log('⚠️  WARNING: Using default admin credentials!');
-    console.log('   Set ADMIN_EMAIL and ADMIN_PASSWORD environment variables for production.');
+    console.log('WARNING: Using default admin credentials!');
+    console.log('Set ADMIN_EMAIL and ADMIN_PASSWORD environment variables for production.');
     console.log('');
   }
 
@@ -36,11 +36,10 @@ async function main() {
     },
   });
 
-  console.log('✅ Admin user created:');
-  console.log(`   Email: ${adminEmail}`);
-  console.log(`   Password: ${adminPassword}`);
-  console.log('   Role: ADMIN');
-  console.log('   ⚠️  IMPORTANT: Change the password after first login!');
+  console.log('Admin user created successfully');
+  console.log(`Email: ${adminEmail}`);
+  console.log('Role: ADMIN');
+  console.log('IMPORTANT: Change the password after first login!');
   console.log('');
 
   // Create Article 1: Coach Abu Preseason
@@ -177,9 +176,9 @@ As the seedlings take root during the rainy season, they symbolize hope, renewal
       id: generateIcfcIdWithModel('article'),
       title: 'Meet Our Captain Fantastic: Arafat Mohamed',
       slug: 'meet-captain-fantastic-arafat-mohamed',
-      content: `Leadership, commitment, and passion define **Arafat Mohamed Mugo**, fondly known as **Arif** — the heartbeat of **Isiolo City FC** and the man entrusted with wearing the captain’s armband. As the Bulls continue to build a competitive and disciplined squad, Arif stands out as a symbol of resilience and responsibility both on and off the pitch.
+      content: `Leadership, commitment, and passion define **Arafat Mohamed**, fondly known as **Arif** — the heartbeat of **Isiolo City FC** and the man entrusted with wearing the captain’s armband. As the Bulls continue to build a competitive and disciplined squad, Arif stands out as a symbol of resilience and responsibility both on and off the pitch.
 
-Arafat Mohamed Mugo leads by example. Calm under pressure and fearless in competition, he brings balance and authority to the team. Whether organizing play, motivating teammates, or making crucial interventions, Arif’s presence is felt across the pitch. His understanding of the game and ability to read situations have made him a natural leader within the dressing room.
+Arafat Mohamed leads by example. Calm under pressure and fearless in competition, he brings balance and authority to the team. Whether organizing play, motivating teammates, or making crucial interventions, Arif’s presence is felt across the pitch. His understanding of the game and ability to read situations have made him a natural leader within the dressing room.
 
 ## A Captain Built on Hard Work
 
@@ -199,14 +198,14 @@ Off the pitch, Arif represents the club with humility and pride. He connects eas
 
 ## Captain Fantastic
 
-As Isiolo City FC looks toward a challenging and ambitious season ahead, having **Arafat Mohamed Mugo (Arif)** as captain provides stability, confidence, and direction. He is more than just a leader — he is the standard.
+As Isiolo City FC looks toward a challenging and ambitious season ahead, having **Arafat Mohamed  (Arif)** as captain provides stability, confidence, and direction. He is more than just a leader — he is the standard.
 
 **Captain Fantastic. Leader of the Bulls.** 🐂⚽**`,
       excerpt: 'Meet Arafat Mohamed, the calm and composed leader who embodies discipline, professionalism, and unity as captain of Isiolo City Football Club.',
       category: 'PLAYER_PROFILE',
       status: 'PUBLISHED',
       featuredImageUrl: 'https://res.cloudinary.com/dzideskz7/image/upload/v1767115888/IMG-20251230-WA0021_bbyrap.jpg',
-      tags: ['player profile', 'captain', 'Arafat Mugo', 'leadership', 'team'],
+      tags: ['player profile', 'captain', 'Arafat ', 'leadership', 'team'],
       authorId: admin.id,
       publishedAt: new Date('2025-12-26T10:00:00Z'),
     },

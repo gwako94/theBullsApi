@@ -19,7 +19,11 @@ interface JWTPayload {
 }
 
 function getJWTSecret(): string {
-  return process.env.JWT_SECRET || 'your-secret-key';
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not set');
+  }
+  return secret;
 }
 
 export async function createContext({ req }: any): Promise<Context> {
