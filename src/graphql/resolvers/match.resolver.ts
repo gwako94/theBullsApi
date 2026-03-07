@@ -1,6 +1,9 @@
 import { Context } from '../../utils/context';
 import { generateIcfcIdWithModel } from '../../utils/id-generator';
-import { GraphQLError } from 'graphql';
+import { handlePrismaError } from '../../utils/prisma-errors';
+import { requireAdmin } from '../../utils/auth';
+
+const teamInclude = { homeTeam: true, awayTeam: true } as const;
 
 export const matchResolvers = {
   Query: {
@@ -9,13 +12,17 @@ export const matchResolvers = {
 
       return context.prisma.match.findMany({
         where,
-        orderBy: { kickoffTime: 'desc' },
-        take: limit,
+        orderBy: { kickoffTime: 'asc' },
+        take: Math.min(limit, 100),
+        include: teamInclude,
       });
     },
 
     match: async (_: any, { id }: { id: string }, context: Context) => {
-      return context.prisma.match.findUnique({ where: { id } });
+      return context.prisma.match.findUnique({
+        where: { id },
+        include: teamInclude,
+      });
     },
 
     upcomingMatches: async (_: any, { limit = 5 }: any, context: Context) => {
@@ -25,65 +32,96 @@ export const matchResolvers = {
           status: { in: ['SCHEDULED', 'LIVE'] as any[] },
         },
         orderBy: { kickoffTime: 'asc' },
-        take: limit,
+        take: Math.min(limit, 20),
+        include: teamInclude,
       });
     },
   },
 
   Mutation: {
     createMatch: async (_: any, { input }: any, context: Context) => {
-      if (!context.user || context.user.role !== 'ADMIN') {
-        throw new GraphQLError('Unauthorized', {
-          extensions: { code: 'UNAUTHORIZED' },
+      requireAdmin(context);
+
+      try {
+        return await context.prisma.match.create({
+          data: {
+            id: generateIcfcIdWithModel('match'),
+            ...input,
+          },
+          include: teamInclude,
         });
+      } catch (error) {
+        handlePrismaError(error, 'Match');
       }
-
-      return context.prisma.match.create({
-        data: {
-          id: generateIcfcIdWithModel('match'),
-          ...input,
-        },
-      });
     },
 
-    updateMatchStatus: async (_: any, { id, status }: any, context: Context) => {
-      if (!context.user || context.user.role !== 'ADMIN') {
-        throw new GraphQLError('Unauthorized', {
-          extensions: { code: 'UNAUTHORIZED' },
+    bulkCreateMatches: async (_: any, { input }: { input: any[] }, context: Context) => {
+      requireAdmin(context);
+
+      try {
+        const createdMatches = await context.prisma.$transaction(
+          input.map((matchInput) =>
+            context.prisma.match.create({
+              data: {
+                id: generateIcfcIdWithModel('match'),
+                homeTeamId: matchInput.homeTeamId,
+                awayTeamId: matchInput.awayTeamId,
+                venue: matchInput.venue,
+                kickoffTime: matchInput.kickoffTime,
+                competition: matchInput.competition,
+                season: matchInput.season,
+              },
+              include: teamInclude,
+            })
+          )
+        );
+
+        return {
+          success: true,
+          created: createdMatches.length,
+          failed: 0,
+          errors: [],
+          matches: createdMatches,
+        };
+      } catch (error: any) {
+        const message =
+          error.code === 'P2003'
+            ? 'One or more team IDs do not exist — no matches were created'
+            : `Bulk create failed — no matches were created: ${error.message}`;
+
+        return {
+          success: false,
+          created: 0,
+          failed: input.length,
+          errors: [message],
+          matches: [],
+        };
+      }
+    },
+
+    updateMatch: async (_: any, { id, input }: any, context: Context) => {
+      requireAdmin(context);
+
+      try {
+        return await context.prisma.match.update({
+          where: { id },
+          data: input,
+          include: teamInclude,
         });
+      } catch (error) {
+        handlePrismaError(error, 'Match');
       }
-
-      return context.prisma.match.update({
-        where: { id },
-        data: { status },
-      });
     },
 
-    updateMatchScore: async (_: any, { id, homeScore, awayScore }: any, context: Context) => {
-      if (!context.user || context.user.role !== 'ADMIN') {
-        throw new GraphQLError('Unauthorized', {
-          extensions: { code: 'UNAUTHORIZED' },
-        });
+    deleteMatch: async (_: any, { id }: { id: string }, context: Context) => {
+      requireAdmin(context);
+
+      try {
+        await context.prisma.match.delete({ where: { id } });
+      } catch (error) {
+        handlePrismaError(error, 'Match');
       }
-
-      return context.prisma.match.update({
-        where: { id },
-        data: { homeScore, awayScore },
-      });
-    },
-  },
-
-  Match: {
-    homeTeam: (parent: any, _: any, context: Context) => {
-      return context.prisma.team.findUnique({ where: { id: parent.homeTeamId } });
-    },
-
-    awayTeam: (parent: any, _: any, context: Context) => {
-      return context.prisma.team.findUnique({ where: { id: parent.awayTeamId } });
-    },
-
-    venue: (parent: any, _: any, context: Context) => {
-      return context.prisma.venue.findUnique({ where: { id: parent.venueId } });
+      return true;
     },
   },
 };

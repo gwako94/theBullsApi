@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import { getJWTSecret } from './auth';
 
 const prisma = new PrismaClient();
 
@@ -18,14 +19,6 @@ interface JWTPayload {
   role: string;
 }
 
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is not set');
-  }
-  return secret;
-}
-
 export async function createContext({ req }: any): Promise<Context> {
   const token = req.headers.authorization?.replace('Bearer ', '');
 
@@ -39,11 +32,23 @@ export async function createContext({ req }: any): Promise<Context> {
         JWT_SECRET
       ) as JWTPayload;
 
-      user = {
-        id: decoded.userId,
-        email: decoded.email,
-        role: decoded.role,
-      };
+      const dbUser = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          isActive: true,
+        },
+      });
+
+      if (dbUser?.isActive) {
+        user = {
+          id: dbUser.id,
+          email: dbUser.email,
+          role: dbUser.role,
+        };
+      }
     } catch (error) {
       // Token verification failed - silently continue as unauthenticated
       if (process.env.NODE_ENV === 'development') {

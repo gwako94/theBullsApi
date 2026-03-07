@@ -116,7 +116,7 @@ model Article {
   @@index([slug])
   @@index([authorId])
   @@index([category])
-  @@index([publishedAt])
+  @@index([status, publishedAt(sort: Desc)])
   @@map("articles")
 }
 
@@ -164,18 +164,19 @@ model Player {
 
   // Relations
   user            User?         @relation(fields: [userId], references: [id])
-  stats           PlayerStats?
+  stats           PlayerStats[]
   achievements    Achievement[]
-  matches         Match[]       @relation("MatchPlayers")
 
+  @@unique([jerseyNumber])
   @@index([position])
   @@index([status])
+  @@index([status, jerseyNumber])
   @@map("players")
 }
 
 model PlayerStats {
   id              String   @id @default(uuid())
-  playerId        String   @unique
+  playerId        String
   season          String   // e.g., "2024-2025"
   appearances     Int      @default(0)
   goals           Int      @default(0)
@@ -193,7 +194,7 @@ model PlayerStats {
 
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
-  @@index([playerId])
+  @@unique([playerId, season])
   @@index([season])
   @@map("player_stats")
 }
@@ -226,81 +227,45 @@ enum MatchStatus {
   CANCELLED
 }
 
-model Match {
-  id              String       @id @default(uuid())
-  homeTeamId      String
-  awayTeamId      String
-  venueId         String
-  kickoffTime     DateTime
-  competition     String
-  season          String
-  status          MatchStatus  @default(SCHEDULED)
-  homeScore       Int?
-  awayScore       Int?
-  attendance      Int?
-  matchReport     String?      @db.Text
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  highlightUrls   String[]
-
-  // Relations
-  homeTeam        Team         @relation("HomeMatches", fields: [homeTeamId], references: [id])
-  awayTeam        Team         @relation("AwayMatches", fields: [awayTeamId], references: [id])
-  venue           Venue        @relation(fields: [venueId], references: [id])
-  players         Player[]     @relation("MatchPlayers")
-  tickets         Ticket[]
-
-  @@index([kickoffTime])
-  @@index([status])
-  @@index([season])
-  @@map("matches")
-}
-
 model Team {
-  id           String  @id @default(uuid())
-  name         String
-  shortName    String
-  logo         String?
-  country      String
-  founded      Int?
-  stadium      String?
-  website      String?
+  id        String  @id @default(uuid())
+  name      String  @unique
+  shortName String?
+  badgeUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  homeMatches  Match[] @relation("HomeMatches")
-  awayMatches  Match[] @relation("AwayMatches")
+  homeMatches Match[] @relation("HomeTeam")
+  awayMatches Match[] @relation("AwayTeam")
 
+  @@index([name])
   @@map("teams")
 }
 
-model Venue {
-  id       String  @id @default(uuid())
-  name     String
-  city     String
-  country  String
-  capacity Int
-  address  String?
+model Match {
+  id           String      @id @default(uuid())
+  homeTeamId   String
+  awayTeamId   String
+  venue        String
+  kickoffTime  DateTime
+  competition  String
+  season       String
+  status       MatchStatus @default(SCHEDULED)
+  homeScore    Int?
+  awayScore    Int?
+  matchReport  String?     @db.Text
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  matches  Match[]
+  homeTeam Team @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam Team @relation("AwayTeam", fields: [awayTeamId], references: [id])
 
-  @@map("venues")
-}
-
-model Ticket {
-  id          String   @id @default(uuid())
-  matchId     String
-  seatNumber  String
-  category    String   // e.g., "VIP", "Regular", "Student"
-  price       Float
-  isPurchased Boolean  @default(false)
-  purchasedAt DateTime?
-  createdAt   DateTime @default(now())
-
-  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
-
-  @@index([matchId])
-  @@index([isPurchased])
-  @@map("tickets")
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@index([kickoffTime, status])
+  @@index([status])
+  @@index([season])
+  @@map("matches")
 }
 
 // ============================================

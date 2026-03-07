@@ -153,7 +153,7 @@ export const typeDefs = gql`
     joinedDate: DateTime!
     contractEndDate: DateTime
     photoUrls: [String!]!
-    stats: PlayerStats
+    stats: [PlayerStats!]!
     achievements: [Achievement!]!
     createdAt: DateTime!
   }
@@ -199,12 +199,72 @@ export const typeDefs = gql`
     photoUrls: [String!]
   }
 
+  # S13: Typed update input — prevents mass-assignment of id, createdAt, userId, etc.
+  input UpdatePlayerInput {
+    firstName: String
+    lastName: String
+    displayName: String
+    position: Position
+    jerseyNumber: Int
+    nationality: String
+    dateOfBirth: DateTime
+    height: Float
+    weight: Float
+    preferredFoot: String
+    status: PlayerStatus
+    bio: String
+    joinedDate: DateTime
+    contractEndDate: DateTime
+    photoUrls: [String!]
+  }
+
   type BulkPlayerResult {
     success: Boolean!
     created: Int!
     failed: Int!
     errors: [String!]!
     players: [Player!]!
+  }
+
+  # ============================================
+  # TEAMS
+  # ============================================
+
+  type Team {
+    id: ID!
+    name: String!
+    shortName: String
+    badgeUrl: String
+    createdAt: DateTime!
+    updatedAt: DateTime!
+  }
+
+  input CreateTeamInput {
+    name: String!
+    shortName: String
+    badgeUrl: String
+  }
+
+  input UpdateTeamInput {
+    name: String
+    shortName: String
+    badgeUrl: String
+  }
+
+  type BulkTeamResult {
+    success: Boolean!
+    created: Int!
+    failed: Int!
+    errors: [String!]!
+    teams: [Team!]!
+  }
+
+  type BulkMatchResult {
+    success: Boolean!
+    created: Int!
+    failed: Int!
+    errors: [String!]!
+    matches: [Match!]!
   }
 
   # ============================================
@@ -224,46 +284,38 @@ export const typeDefs = gql`
     id: ID!
     homeTeam: Team!
     awayTeam: Team!
-    venue: Venue!
+    venue: String!
     kickoffTime: DateTime!
     competition: String!
     season: String!
     status: MatchStatus!
     homeScore: Int
     awayScore: Int
-    attendance: Int
     matchReport: String
-    highlightUrls: [String!]!
     createdAt: DateTime!
-  }
-
-  type Team {
-    id: ID!
-    name: String!
-    shortName: String!
-    logo: String
-    country: String!
-    founded: Int
-    stadium: String
-    website: String
-  }
-
-  type Venue {
-    id: ID!
-    name: String!
-    city: String!
-    country: String!
-    capacity: Int!
-    address: String
+    updatedAt: DateTime!
   }
 
   input CreateMatchInput {
     homeTeamId: ID!
     awayTeamId: ID!
-    venueId: ID!
+    venue: String!
     kickoffTime: DateTime!
     competition: String!
     season: String!
+  }
+
+  input UpdateMatchInput {
+    homeTeamId: ID
+    awayTeamId: ID
+    venue: String
+    kickoffTime: DateTime
+    competition: String
+    season: String
+    status: MatchStatus
+    homeScore: Int
+    awayScore: Int
+    matchReport: String
   }
 
   # ============================================
@@ -317,6 +369,7 @@ export const typeDefs = gql`
     capacity: Int!
     ageGroup: String
     price: Float
+    isActive: Boolean
   }
 
   input EnrollProgramInput {
@@ -436,6 +489,20 @@ export const typeDefs = gql`
     description: String
     startDate: DateTime!
     endDate: DateTime
+    displayOrder: Int
+  }
+
+  # S13: Typed update input — prevents mass-assignment of id, createdAt, userId, etc.
+  input UpdateSponsorInput {
+    name: String
+    logo: String
+    website: String
+    tier: SponsorTier
+    description: String
+    startDate: DateTime
+    endDate: DateTime
+    isActive: Boolean
+    displayOrder: Int
   }
 
   # ============================================
@@ -447,14 +514,19 @@ export const typeDefs = gql`
     me: User
 
     # Content
-    articles(category: ContentCategory, limit: Int, offset: Int): [Article!]!
+    articles(category: ContentCategory, status: ContentStatus, limit: Int, offset: Int): [Article!]!
     article(slug: String!): Article
+    articleById(id: ID!): Article
     latestNews(limit: Int): [Article!]!
 
     # Players
     players(position: Position, status: PlayerStatus): [Player!]!
     player(id: ID!): Player
     playersByPosition(position: Position!): [Player!]!
+
+    # Teams
+    teams: [Team!]!
+    team(id: ID!): Team
 
     # Matches
     matches(status: MatchStatus, limit: Int): [Match!]!
@@ -493,13 +565,20 @@ export const typeDefs = gql`
     # Players (Admin only)
     createPlayer(input: CreatePlayerInput!): Player!
     bulkCreatePlayers(input: [CreatePlayerInput!]!): BulkPlayerResult!
-    updatePlayer(id: ID!, input: JSON!): Player!
+    updatePlayer(id: ID!, input: UpdatePlayerInput!): Player!
     deletePlayer(id: ID!): Boolean!
+
+    # Teams (Admin only)
+    createTeam(input: CreateTeamInput!): Team!
+    bulkCreateTeams(input: [CreateTeamInput!]!): BulkTeamResult!
+    updateTeam(id: ID!, input: UpdateTeamInput!): Team!
+    deleteTeam(id: ID!): Boolean!
 
     # Matches (Admin only)
     createMatch(input: CreateMatchInput!): Match!
-    updateMatchStatus(id: ID!, status: MatchStatus!): Match!
-    updateMatchScore(id: ID!, homeScore: Int!, awayScore: Int!): Match!
+    bulkCreateMatches(input: [CreateMatchInput!]!): BulkMatchResult!
+    updateMatch(id: ID!, input: UpdateMatchInput!): Match!
+    deleteMatch(id: ID!): Boolean!
 
     # Foundation
     createProgram(input: CreateProgramInput!): FoundationProgram!
@@ -510,18 +589,10 @@ export const typeDefs = gql`
 
     # Sponsors (Admin only)
     createSponsor(input: CreateSponsorInput!): Sponsor!
-    updateSponsor(id: ID!, input: JSON!): Sponsor!
+    updateSponsor(id: ID!, input: UpdateSponsorInput!): Sponsor!
 
     # Newsletter
     subscribeNewsletter(email: String!): Boolean!
   }
 
-  # ============================================
-  # SUBSCRIPTIONS
-  # ============================================
-
-  type Subscription {
-    matchUpdate(matchId: ID!): Match!
-    newArticle: Article!
-  }
 `;

@@ -1,10 +1,3 @@
-databases:
-  - name: isiolo-city-postgres
-    databaseName: isiolo_city_db
-    user: isiolo_admin
-    plan: free
-    region: oregon
-
 services:
   - type: web
     name: isiolo-city-backend
@@ -19,9 +12,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: isiolo-city-postgres
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL

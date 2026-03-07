@@ -1,6 +1,8 @@
 import { Context } from '../../utils/context';
 import { generateIcfcIdWithModel } from '../../utils/id-generator';
 import { GraphQLError } from 'graphql';
+import { handlePrismaError } from '../../utils/prisma-errors';
+import { requireAdmin } from '../../utils/auth';
 
 export const foundationResolvers = {
   Query: {
@@ -22,18 +24,18 @@ export const foundationResolvers = {
 
   Mutation: {
     createProgram: async (_: any, { input }: any, context: Context) => {
-      if (!context.user || context.user.role !== 'ADMIN') {
-        throw new GraphQLError('Unauthorized', {
-          extensions: { code: 'UNAUTHORIZED' },
-        });
-      }
+      requireAdmin(context);
 
-      return context.prisma.foundationProgram.create({
-        data: {
-          id: generateIcfcIdWithModel('program'),
-          ...input,
-        },
-      });
+      try {
+        return await context.prisma.foundationProgram.create({
+          data: {
+            id: generateIcfcIdWithModel('program'),
+            ...input,
+          },
+        });
+      } catch (error) {
+        handlePrismaError(error, 'Program');
+      }
     },
 
     enrollInProgram: async (_: any, { input }: any, context: Context) => {
@@ -43,12 +45,41 @@ export const foundationResolvers = {
         });
       }
 
-      return context.prisma.enrollment.create({
-        data: {
-          id: generateIcfcIdWithModel('enrollment'),
-          ...input,
-        },
+      // B5: Validate program is active and has available capacity
+      const program = await context.prisma.foundationProgram.findUnique({
+        where: { id: input.programId },
+        include: { _count: { select: { enrollments: true } } },
       });
+
+      if (!program || !program.isActive) {
+        throw new GraphQLError('Program is not available for enrollment', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+
+      if (program._count.enrollments >= program.capacity) {
+        throw new GraphQLError('Program is at full capacity', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+
+      // B6: Only write explicitly allowed fields — status must default to PENDING, never client-supplied
+      try {
+        return await context.prisma.enrollment.create({
+          data: {
+            id: generateIcfcIdWithModel('enrollment'),
+            programId: input.programId,
+            studentName: input.studentName,
+            studentAge: input.studentAge,
+            guardianName: input.guardianName,
+            guardianEmail: input.guardianEmail,
+            guardianPhone: input.guardianPhone,
+            // status intentionally omitted — defaults to PENDING in the DB schema
+          },
+        });
+      } catch (error) {
+        handlePrismaError(error, 'Enrollment');
+      }
     },
   },
 
@@ -56,6 +87,15 @@ export const foundationResolvers = {
     enrollments: (parent: any, _: any, context: Context) => {
       return context.prisma.enrollment.findMany({
         where: { programId: parent.id },
+      });
+    },
+  },
+
+  // G1: Enrollment.program is non-nullable in the schema — must have a resolver
+  Enrollment: {
+    program: (parent: any, _: any, context: Context) => {
+      return context.prisma.foundationProgram.findUnique({
+        where: { id: parent.programId },
       });
     },
   },

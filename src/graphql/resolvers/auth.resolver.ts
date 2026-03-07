@@ -3,26 +3,48 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { GraphQLError } from 'graphql';
 import { generateIcfcIdWithModel } from '../../utils/id-generator';
+import { randomUUID, createHash } from 'crypto';
+import { z } from 'zod';
+import { getJWTSecret } from '../../utils/auth';
+
+// Q10: Typed payload for refresh token JWTs
+interface JWTRefreshPayload {
+  userId: string;
+  type: string;
+  jti: string;
+  iat: number;
+  exp: number;
+}
+
+// S5: Store only a SHA-256 hash of tokens — raw token never written to DB.
+function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+// S11/S12: Registration input validation schema
+const registerSchema = z.object({
+  email: z.string().email({ message: 'Invalid email address' }),
+  // min 8 enforces meaningful passwords; max 72 prevents bcrypt truncation vulnerability
+  password: z
+    .string()
+    .min(8, { message: 'Password must be at least 8 characters' })
+    .max(72, { message: 'Password must be at most 72 characters' }),
+  name: z.string().min(1, { message: 'Name is required' }),
+});
 
 const JWT_EXPIRES_IN = '7d';
 const REFRESH_TOKEN_EXPIRES_IN = '30d';
 
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is not set');
-  }
-  return secret;
-}
-
 function generateTokens(userId: string, email: string, role: string) {
   const JWT_SECRET = getJWTSecret();
+  const accessTokenId = randomUUID();
+  const refreshTokenId = randomUUID();
 
-  const token = jwt.sign({ userId, email, role }, JWT_SECRET, {
+  const token = jwt.sign({ userId, email, role, jti: accessTokenId }, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
   });
 
-  const refreshToken = jwt.sign({ userId, type: 'refresh' }, JWT_SECRET, {
+  const refreshToken = jwt.sign({ userId, type: 'refresh', jti: refreshTokenId }, JWT_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRES_IN,
   });
 
@@ -60,6 +82,15 @@ export const authResolvers = {
       context: Context
     ) => {
       const { email, password, name, phone } = input;
+
+      // S11/S12: Validate email format and password strength
+      const validation = registerSchema.safeParse({ email, password, name });
+      if (!validation.success) {
+        throw new GraphQLError(
+          validation.error.errors.map((e) => e.message).join('; '),
+          { extensions: { code: 'BAD_USER_INPUT' } }
+        );
+      }
 
       // Check if user already exists
       const existingUser = await context.prisma.user.findUnique({
@@ -103,8 +134,8 @@ export const authResolvers = {
         data: {
           id: generateIcfcIdWithModel('session'),
           userId: user.id,
-          token,
-          refreshToken,
+          token: hashToken(token),
+          refreshToken: hashToken(refreshToken),
           expiresAt,
         },
       });
@@ -143,6 +174,18 @@ export const authResolvers = {
         });
       }
 
+      // S8: Block deactivated accounts
+      if (!user.isActive) {
+        throw new GraphQLError('Account is disabled', {
+          extensions: { code: 'FORBIDDEN' },
+        });
+      }
+
+      // D5: Prune this user's expired sessions at login time to keep the table bounded
+      await context.prisma.session.deleteMany({
+        where: { userId: user.id, expiresAt: { lt: new Date() } },
+      });
+
       // Generate tokens
       const { token, refreshToken } = generateTokens(
         user.id,
@@ -158,8 +201,8 @@ export const authResolvers = {
         data: {
           id: generateIcfcIdWithModel('session'),
           userId: user.id,
-          token,
-          refreshToken,
+          token: hashToken(token),
+          refreshToken: hashToken(refreshToken),
           expiresAt,
         },
       });
@@ -178,20 +221,32 @@ export const authResolvers = {
     ) => {
       try {
         const JWT_SECRET = getJWTSecret();
-        const decoded = jwt.verify(refreshToken, JWT_SECRET) as any;
+        const decoded = jwt.verify(refreshToken, JWT_SECRET) as JWTRefreshPayload;
 
         if (decoded.type !== 'refresh') {
           throw new Error('Invalid token type');
         }
 
-        // Find session
+        // Find session — compare against stored hash (S5)
         const session = await context.prisma.session.findUnique({
-          where: { refreshToken },
+          where: { refreshToken: hashToken(refreshToken) },
           include: { user: true },
         });
 
         if (!session) {
           throw new Error('Session not found');
+        }
+
+        // S7: Enforce session expiry
+        if (session.expiresAt < new Date()) {
+          await context.prisma.session.delete({ where: { id: session.id } });
+          throw new Error('Session expired');
+        }
+
+        // S8: Block deactivated accounts on token refresh
+        if (!session.user.isActive) {
+          await context.prisma.session.delete({ where: { id: session.id } });
+          throw new Error('Account is disabled');
         }
 
         // Generate new tokens
@@ -201,15 +256,18 @@ export const authResolvers = {
           session.user.role
         );
 
-        // Update session
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 30);
 
-        await context.prisma.session.update({
-          where: { id: session.id },
+        // S6: True token rotation — delete old session, create a new one.
+        // This immediately invalidates the old refresh token so it cannot be reused.
+        await context.prisma.session.delete({ where: { id: session.id } });
+        await context.prisma.session.create({
           data: {
-            token: tokens.token,
-            refreshToken: tokens.refreshToken,
+            id: generateIcfcIdWithModel('session'),
+            userId: session.user.id,
+            token: hashToken(tokens.token),
+            refreshToken: hashToken(tokens.refreshToken),
             expiresAt,
           },
         });

@@ -5,13 +5,10 @@ CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'MEMBER', 'FAN', 'COACH', 'PLAYER');
 CREATE TYPE "MembershipTier" AS ENUM ('FREE', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM');
 
 -- CreateEnum
-CREATE TYPE "ContentCategory" AS ENUM ('NEWS', 'MATCH_REPORT', 'INTERVIEW', 'FEATURE', 'PRESS_RELEASE', 'ANNOUNCEMENT');
+CREATE TYPE "ContentCategory" AS ENUM ('NEWS', 'MATCH_REPORT', 'INTERVIEW', 'FEATURE', 'PRESS_RELEASE', 'ANNOUNCEMENT', 'PRESEASON', 'COACH', 'CLUB_UPDATE', 'COMMUNITY_OUTREACH', 'PLAYER_PROFILE');
 
 -- CreateEnum
 CREATE TYPE "ContentStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
-
--- CreateEnum
-CREATE TYPE "MediaType" AS ENUM ('IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT');
 
 -- CreateEnum
 CREATE TYPE "Position" AS ENUM ('GOALKEEPER', 'DEFENDER', 'MIDFIELDER', 'FORWARD');
@@ -76,41 +73,14 @@ CREATE TABLE "articles" (
     "category" "ContentCategory" NOT NULL,
     "status" "ContentStatus" NOT NULL DEFAULT 'DRAFT',
     "authorId" TEXT NOT NULL,
-    "featuredImageId" TEXT,
+    "featuredImageUrl" TEXT,
+    "tags" TEXT[],
     "publishedAt" TIMESTAMP(3),
     "viewCount" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "articles_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "tags" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "tags_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "media" (
-    "id" TEXT NOT NULL,
-    "url" TEXT NOT NULL,
-    "type" "MediaType" NOT NULL,
-    "title" TEXT,
-    "description" TEXT,
-    "altText" TEXT,
-    "fileSize" INTEGER,
-    "mimeType" TEXT,
-    "width" INTEGER,
-    "height" INTEGER,
-    "duration" INTEGER,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "media_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -131,6 +101,7 @@ CREATE TABLE "players" (
     "bio" TEXT,
     "joinedDate" TIMESTAMP(3) NOT NULL,
     "contractEndDate" TIMESTAMP(3),
+    "photoUrls" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -173,63 +144,34 @@ CREATE TABLE "achievements" (
 );
 
 -- CreateTable
+CREATE TABLE "teams" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "shortName" TEXT,
+    "badgeUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "teams_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "matches" (
     "id" TEXT NOT NULL,
     "homeTeamId" TEXT NOT NULL,
     "awayTeamId" TEXT NOT NULL,
-    "venueId" TEXT NOT NULL,
+    "venue" TEXT NOT NULL,
     "kickoffTime" TIMESTAMP(3) NOT NULL,
     "competition" TEXT NOT NULL,
     "season" TEXT NOT NULL,
     "status" "MatchStatus" NOT NULL DEFAULT 'SCHEDULED',
     "homeScore" INTEGER,
     "awayScore" INTEGER,
-    "attendance" INTEGER,
     "matchReport" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "matches_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "teams" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "shortName" TEXT NOT NULL,
-    "logo" TEXT,
-    "country" TEXT NOT NULL,
-    "founded" INTEGER,
-    "stadium" TEXT,
-    "website" TEXT,
-
-    CONSTRAINT "teams_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "venues" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "city" TEXT NOT NULL,
-    "country" TEXT NOT NULL,
-    "capacity" INTEGER NOT NULL,
-    "address" TEXT,
-
-    CONSTRAINT "venues_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "tickets" (
-    "id" TEXT NOT NULL,
-    "matchId" TEXT NOT NULL,
-    "seatNumber" TEXT NOT NULL,
-    "category" TEXT NOT NULL,
-    "price" DOUBLE PRECISION NOT NULL,
-    "isPurchased" BOOLEAN NOT NULL DEFAULT false,
-    "purchasedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "tickets_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -281,6 +223,7 @@ CREATE TABLE "products" (
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "sizes" TEXT[],
     "colors" TEXT[],
+    "imageUrls" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -347,42 +290,6 @@ CREATE TABLE "newsletter_subscribers" (
     CONSTRAINT "newsletter_subscribers_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "_ArticleToTag" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL
-);
-
--- CreateTable
-CREATE TABLE "_ArticleMedia" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL
-);
-
--- CreateTable
-CREATE TABLE "_PlayerPhotos" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL
-);
-
--- CreateTable
-CREATE TABLE "_ProductImages" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL
-);
-
--- CreateTable
-CREATE TABLE "_MatchHighlights" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL
-);
-
--- CreateTable
-CREATE TABLE "_MatchPlayers" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
@@ -420,13 +327,10 @@ CREATE INDEX "articles_category_idx" ON "articles"("category");
 CREATE INDEX "articles_publishedAt_idx" ON "articles"("publishedAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "tags_name_key" ON "tags"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "tags_slug_key" ON "tags"("slug");
-
--- CreateIndex
 CREATE UNIQUE INDEX "players_userId_key" ON "players"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "players_jerseyNumber_key" ON "players"("jerseyNumber");
 
 -- CreateIndex
 CREATE INDEX "players_position_idx" ON "players"("position");
@@ -435,16 +339,25 @@ CREATE INDEX "players_position_idx" ON "players"("position");
 CREATE INDEX "players_status_idx" ON "players"("status");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "player_stats_playerId_key" ON "player_stats"("playerId");
-
--- CreateIndex
-CREATE INDEX "player_stats_playerId_idx" ON "player_stats"("playerId");
+CREATE UNIQUE INDEX "player_stats_playerId_season_key" ON "player_stats"("playerId", "season");
 
 -- CreateIndex
 CREATE INDEX "player_stats_season_idx" ON "player_stats"("season");
 
 -- CreateIndex
 CREATE INDEX "achievements_playerId_idx" ON "achievements"("playerId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "teams_name_key" ON "teams"("name");
+
+-- CreateIndex
+CREATE INDEX "teams_name_idx" ON "teams"("name");
+
+-- CreateIndex
+CREATE INDEX "matches_homeTeamId_idx" ON "matches"("homeTeamId");
+
+-- CreateIndex
+CREATE INDEX "matches_awayTeamId_idx" ON "matches"("awayTeamId");
 
 -- CreateIndex
 CREATE INDEX "matches_kickoffTime_idx" ON "matches"("kickoffTime");
@@ -454,12 +367,6 @@ CREATE INDEX "matches_status_idx" ON "matches"("status");
 
 -- CreateIndex
 CREATE INDEX "matches_season_idx" ON "matches"("season");
-
--- CreateIndex
-CREATE INDEX "tickets_matchId_idx" ON "tickets"("matchId");
-
--- CreateIndex
-CREATE INDEX "tickets_isPurchased_idx" ON "tickets"("isPurchased");
 
 -- CreateIndex
 CREATE INDEX "foundation_programs_type_idx" ON "foundation_programs"("type");
@@ -521,50 +428,11 @@ CREATE UNIQUE INDEX "newsletter_subscribers_email_key" ON "newsletter_subscriber
 -- CreateIndex
 CREATE INDEX "newsletter_subscribers_email_idx" ON "newsletter_subscribers"("email");
 
--- CreateIndex
-CREATE UNIQUE INDEX "_ArticleToTag_AB_unique" ON "_ArticleToTag"("A", "B");
-
--- CreateIndex
-CREATE INDEX "_ArticleToTag_B_index" ON "_ArticleToTag"("B");
-
--- CreateIndex
-CREATE UNIQUE INDEX "_ArticleMedia_AB_unique" ON "_ArticleMedia"("A", "B");
-
--- CreateIndex
-CREATE INDEX "_ArticleMedia_B_index" ON "_ArticleMedia"("B");
-
--- CreateIndex
-CREATE UNIQUE INDEX "_PlayerPhotos_AB_unique" ON "_PlayerPhotos"("A", "B");
-
--- CreateIndex
-CREATE INDEX "_PlayerPhotos_B_index" ON "_PlayerPhotos"("B");
-
--- CreateIndex
-CREATE UNIQUE INDEX "_ProductImages_AB_unique" ON "_ProductImages"("A", "B");
-
--- CreateIndex
-CREATE INDEX "_ProductImages_B_index" ON "_ProductImages"("B");
-
--- CreateIndex
-CREATE UNIQUE INDEX "_MatchHighlights_AB_unique" ON "_MatchHighlights"("A", "B");
-
--- CreateIndex
-CREATE INDEX "_MatchHighlights_B_index" ON "_MatchHighlights"("B");
-
--- CreateIndex
-CREATE UNIQUE INDEX "_MatchPlayers_AB_unique" ON "_MatchPlayers"("A", "B");
-
--- CreateIndex
-CREATE INDEX "_MatchPlayers_B_index" ON "_MatchPlayers"("B");
-
 -- AddForeignKey
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "articles" ADD CONSTRAINT "articles_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "articles" ADD CONSTRAINT "articles_featuredImageId_fkey" FOREIGN KEY ("featuredImageId") REFERENCES "media"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "players" ADD CONSTRAINT "players_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -574,18 +442,6 @@ ALTER TABLE "player_stats" ADD CONSTRAINT "player_stats_playerId_fkey" FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE "achievements" ADD CONSTRAINT "achievements_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "players"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "matches" ADD CONSTRAINT "matches_homeTeamId_fkey" FOREIGN KEY ("homeTeamId") REFERENCES "teams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "matches" ADD CONSTRAINT "matches_awayTeamId_fkey" FOREIGN KEY ("awayTeamId") REFERENCES "teams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "matches" ADD CONSTRAINT "matches_venueId_fkey" FOREIGN KEY ("venueId") REFERENCES "venues"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tickets" ADD CONSTRAINT "tickets_matchId_fkey" FOREIGN KEY ("matchId") REFERENCES "matches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_programId_fkey" FOREIGN KEY ("programId") REFERENCES "foundation_programs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -600,37 +456,7 @@ ALTER TABLE "order_items" ADD CONSTRAINT "order_items_orderId_fkey" FOREIGN KEY 
 ALTER TABLE "order_items" ADD CONSTRAINT "order_items_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_ArticleToTag" ADD CONSTRAINT "_ArticleToTag_A_fkey" FOREIGN KEY ("A") REFERENCES "articles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "matches" ADD CONSTRAINT "matches_homeTeamId_fkey" FOREIGN KEY ("homeTeamId") REFERENCES "teams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_ArticleToTag" ADD CONSTRAINT "_ArticleToTag_B_fkey" FOREIGN KEY ("B") REFERENCES "tags"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_ArticleMedia" ADD CONSTRAINT "_ArticleMedia_A_fkey" FOREIGN KEY ("A") REFERENCES "articles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_ArticleMedia" ADD CONSTRAINT "_ArticleMedia_B_fkey" FOREIGN KEY ("B") REFERENCES "media"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_PlayerPhotos" ADD CONSTRAINT "_PlayerPhotos_A_fkey" FOREIGN KEY ("A") REFERENCES "media"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_PlayerPhotos" ADD CONSTRAINT "_PlayerPhotos_B_fkey" FOREIGN KEY ("B") REFERENCES "players"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_ProductImages" ADD CONSTRAINT "_ProductImages_A_fkey" FOREIGN KEY ("A") REFERENCES "media"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_ProductImages" ADD CONSTRAINT "_ProductImages_B_fkey" FOREIGN KEY ("B") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_MatchHighlights" ADD CONSTRAINT "_MatchHighlights_A_fkey" FOREIGN KEY ("A") REFERENCES "matches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_MatchHighlights" ADD CONSTRAINT "_MatchHighlights_B_fkey" FOREIGN KEY ("B") REFERENCES "media"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_MatchPlayers" ADD CONSTRAINT "_MatchPlayers_A_fkey" FOREIGN KEY ("A") REFERENCES "matches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_MatchPlayers" ADD CONSTRAINT "_MatchPlayers_B_fkey" FOREIGN KEY ("B") REFERENCES "players"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "matches" ADD CONSTRAINT "matches_awayTeamId_fkey" FOREIGN KEY ("awayTeamId") REFERENCES "teams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
