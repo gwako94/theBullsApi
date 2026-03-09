@@ -30,6 +30,7 @@ const graphqlLimiter = rateLimit({
 
 async function startServer() {
   const app = express();
+  app.set('trust proxy', 1);
   const httpServer = http.createServer(app);
 
   // Build the schema once so it can be shared with the complexity plugin
