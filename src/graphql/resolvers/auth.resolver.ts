@@ -3,9 +3,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { GraphQLError } from 'graphql';
 import { generateIcfcIdWithModel } from '../../utils/id-generator';
-import { randomUUID, createHash } from 'crypto';
+import { randomUUID } from 'crypto';
 import { z } from 'zod';
-import { getJWTSecret } from '../../utils/auth';
+import { getJWTSecret, hashToken } from '../../utils/auth';
 
 // Q10: Typed payload for refresh token JWTs
 interface JWTRefreshPayload {
@@ -14,11 +14,6 @@ interface JWTRefreshPayload {
   jti: string;
   iat: number;
   exp: number;
-}
-
-// S5: Store only a SHA-256 hash of tokens — raw token never written to DB.
-function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
 }
 
 // S11/S12: Registration input validation schema

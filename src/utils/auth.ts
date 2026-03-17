@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { createHash } from 'crypto';
 import { Context } from './context';
 
 // Q2: Single source of truth for JWT secret retrieval — no more copy-paste
@@ -25,4 +26,9 @@ export function requireAdmin(context: Context): asserts context is Context & { u
       extensions: { code: 'UNAUTHORIZED' },
     });
   }
+}
+
+// S5: Store only a SHA-256 hash of tokens — raw token never written to DB.
+export function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }

@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
-import { getJWTSecret } from './auth';
+import { getJWTSecret, hashToken } from './auth';
 
 const prisma = new PrismaClient();
 
@@ -13,12 +13,6 @@ export interface Context {
   } | null;
 }
 
-interface JWTPayload {
-  userId: string;
-  email: string;
-  role: string;
-}
-
 export async function createContext({ req }: any): Promise<Context> {
   const token = req.headers.authorization?.replace('Bearer ', '');
 
@@ -27,26 +21,31 @@ export async function createContext({ req }: any): Promise<Context> {
   if (token) {
     try {
       const JWT_SECRET = getJWTSecret();
-      const decoded = jwt.verify(
-        token,
-        JWT_SECRET
-      ) as JWTPayload;
+      // Verify JWT signature and expiry before hitting the DB
+      jwt.verify(token, JWT_SECRET);
 
-      const dbUser = await prisma.user.findUnique({
-        where: { id: decoded.userId },
+      // Verify the access token has a live session row.
+      // This ensures revoked/rotated tokens are rejected immediately.
+      const session = await prisma.session.findUnique({
+        where: { token: hashToken(token) },
         select: {
-          id: true,
-          email: true,
-          role: true,
-          isActive: true,
+          expiresAt: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+              isActive: true,
+            },
+          },
         },
       });
 
-      if (dbUser?.isActive) {
+      if (session && session.expiresAt > new Date() && session.user.isActive) {
         user = {
-          id: dbUser.id,
-          email: dbUser.email,
-          role: dbUser.role,
+          id: session.user.id,
+          email: session.user.email,
+          role: session.user.role,
         };
       }
     } catch (error) {

@@ -102,6 +102,7 @@ async function startServer() {
         // S10: HTTP origins removed — only HTTPS allowed for production domains
         'https://isiolocityfc.onrender.com',
         'https://thebullsclient.onrender.com',
+        'https://the-bullls-admin.vercel.app',
         ...(process.env.NODE_ENV !== 'production'
           ? ['http://localhost:3000', 'http://localhost:3001']
           : []),
